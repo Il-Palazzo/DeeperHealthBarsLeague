@@ -1,0 +1,18 @@
+# Generated data and training outputs inside LolHealth-Bar
+LolHealth-Bar/runs/
+LolHealth-Bar/Screenshots/
+LolHealth-Bar/synthetic_dataset/
+LolHealth-Bar/To_Classify/
+LolHealth-Bar/yolo_training_data/
+
+# Model weights and other large binary artifacts
+LolHealth-Bar/*.pt
+
+# Notebook and Python cache files
+LolHealth-Bar/.ipynb_checkpoints/
+LolHealth-Bar/**/__pycache__/
+LolHealth-Bar/**/*.pyc
+
+# OS noise
+.DS_Store
+Thumbs.db
