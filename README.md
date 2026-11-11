@@ -6,19 +6,20 @@
 
 ## 📌 Overview
 
-**DeeperHealthBarsLeague** is an end-to-end computer vision toolkit designed to detect, classify, and analyze in-game health bars and entities in League of Legends in real time.
+**DeeperHealthBarsLeague** is an end-to-end computer vision toolkit designed to detect, classify, and track in-game health bars and entities in League of Legends in real time.
+
+Inspired by **[DeeperLeague](https://github.com/m-bain/deeperleague)** — which pioneered deep learning and computer vision analysis on the League of Legends minimap — this project brings real-time detection and game-state analysis directly to the **main gameplay camera**. By focusing on champion health bars, shields, structures, and minion waves, it enables fine-grained tracking of combat engagements, health trades, and map objectives.
 
 Instead of manually annotating thousands of game screenshots, this project features a **fully automated synthetic dataset generator**:
 - Slices official UI sprite sheets (frames, banners, health fills, shields, and resource bars).
-- Composites dynamic health bars with realistic game states (normal health, grey health, shields, spell shields, Kled dismounted HP, mana/fury/energy) onto gameplay backgrounds.
+- Composites dynamic health bars with realistic game states (normal health, grey health, shields, spell shields, Kled dismounted HP, mana/fury/energy) onto clean gameplay backgrounds.
 - Augments scenes with perspective transforms, motion blur, and video compression artifacts.
 - Trains YOLOv8 object detection models and provides a live screen-capture inference HUD.
 
 ---
 
-## 🖼️ Visual Preview
+## 🖼️ Pipeline Architecture & Sprite Slicing
 
-### Pipeline Architecture & Sprite Slicing
 Below is the reference map extracted from the game's UI atlas (`LolHealth-Bar/slice_preview_map.png`):
 
 <p align="center">
@@ -26,19 +27,6 @@ Below is the reference map extracted from the game's UI atlas (`LolHealth-Bar/sl
   <br>
   <em>Auto-detected sprite atlas slicing used for synthetic health bar generation.</em>
 </p>
-
-### Live Vision Detection Preview
-*(Add your live detection preview or gameplay screenshot here! See [How to Add Example Images](#-how-to-add-example-images-to-this-readme) below.)*
-
-```
-+-------------------------------------------------------------------------------+
-|  [0] Player (Green) [92%]  [2] Enemy (Red) [45%]  [12] Minion Wave (6 units)  |
-|         |                        |                          |                 |
-|         v                        v                          v                 |
-|  [ HP: |||||||||||| ]      [ HP: ||||||..... ]      [ HP: |||... ]           |
-|  [ Mana: ||||||||.. ]      [ Shield: |||.... ]                                |
-+-------------------------------------------------------------------------------+
-```
 
 ---
 
@@ -70,15 +58,14 @@ Below is the reference map extracted from the game's UI atlas (`LolHealth-Bar/sl
 DeeperHealthBarsLeague/
 ├── requirements.txt                  # Python dependencies
 ├── .gitignore                        # Git ignore rules (excludes raw captures, .pt weights)
-├── docs/
-│   └── images/                       # Folder for README screenshots and visual assets
+├── docs/                             # Documentation and visual assets
 └── LolHealth-Bar/
     ├── Classified/                   # Hand-curated UI assets
     │   ├── Banners/                  # Champion level badge frames
     │   ├── Colors/                   # Health bar fill gradients (ally, enemy, player, shield)
     │   └── Frames/                   # Health bar border templates (turret, champion, minion)
-    ├── Screenshots/                  # (Local) Directory for your background gameplay captures
-    ├── synthetic_dataset/            # (Local) Generated YOLO training images and labels
+    ├── Screenshots/                  # Directory for background gameplay captures (ignored by git)
+    ├── synthetic_dataset/            # Generated YOLO training images and labels (ignored by git)
     │   ├── images/
     │   └── labels/
     │
@@ -146,18 +133,18 @@ To make the synthetic health bars look natural, the dataset generator composites
 1. Open **`LolHealth-Bar/DataSetGenerator.ipynb`**.
 2. Run the notebook to generate training scenes.
 3. The generator will:
-   - Randomly select background gameplay screenshots.
+   - Randomly select background gameplay screenshots from `LolHealth-Bar/Screenshots/`.
    - Assemble champion, turret, and minion health bars with randomized levels, HP amounts, and shield states.
    - Apply camera augmentations (blur, noise, perspective warp).
    - Export images and bounding box annotations into `synthetic_dataset/images/` and `synthetic_dataset/labels/`.
 
 ### Step 3: Train YOLOv8
-You can train a YOLOv8 nano or small model on the generated dataset:
+Train a YOLOv8 model on the generated dataset:
 
 ```python
 from ultralytics import YOLO
 
-# Load a pretrained YOLOv8 nano model
+# Load a pretrained YOLOv8 model (nano, small, or medium)
 model = YOLO('yolov8n.pt')
 
 # Train on the generated dataset
@@ -166,11 +153,11 @@ model.train(
     epochs=50,
     imgsz=1024,
     batch=16,
-    device='mps'  # Use 'cuda' for NVIDIA GPUs, 'mps' for Apple Silicon, or 'cpu'
+    device='mps'  # 'cuda' for NVIDIA, 'mps' for Apple Silicon, or 'cpu'
 )
 ```
 
-Save your best weights as `best.pt` inside `LolHealth-Bar/`.
+Save your trained weights as `best.pt` inside `LolHealth-Bar/`.
 
 ### Step 4: Run Real-Time Vision Inference
 1. Open **`LolHealth-Bar/PreviewVisionModel.ipynb`**.
@@ -178,63 +165,19 @@ Save your best weights as `best.pt` inside `LolHealth-Bar/`.
 3. A live OpenCV window will open capturing your screen at high FPS, drawing:
    - Health bar bounding boxes and entity classes.
    - Projected body boxes below champions.
-   - Persistent ID tracking.
+   - Centroid tracking with persistent IDs.
    - Real-time FPS, capture latency, and inference latency counter.
 4. Press `q` to quit the live feed.
 
 ---
 
-## 📸 How to Add Example Images to this README
-
-Showing visual results makes your GitHub repository significantly more engaging. Here is the recommended way to add screenshots:
-
-### 1. Take Privacy-Safe Screenshots
-- **Use Practice Tool or Replay Mode:** Avoid recording personal matchmaking games if you want to keep your account anonymous.
-- **Hide Summoner Names:** In League of Legends settings, go to `Interface` → `Health and Resource Bars` → Uncheck `Show Summoner Names`.
-- **Hide Chat:** In settings, disable the in-game chat overlay.
-
-### 2. Save Images into `docs/images/`
-Save your screenshots or demo GIFs into the `docs/images/` directory:
-```text
-docs/images/
-├── live_preview.png
-├── dataset_sample.png
-└── hp_detection_result.png
-```
-
-### 3. Add to the README using Markdown or HTML
-
-#### Option A: Clean Centered HTML (Recommended)
-```html
-<p align="center">
-  <img src="docs/images/live_preview.png" alt="Live YOLO Detection" width="800">
-  <br>
-  <em>Figure: Real-time YOLOv8 detection running at 45 FPS on live gameplay.</em>
-</p>
-```
-
-#### Option B: Standard Markdown
-```markdown
-![Live Detection Preview](docs/images/live_preview.png)
-```
-
-#### Option C: Side-by-Side Comparison
-```html
-<p align="center">
-  <img src="docs/images/raw_screenshot.png" width="48%" />
-  <img src="docs/images/detected_output.png" width="48%" />
-</p>
-```
-
----
-
 ## 🔒 Security & Privacy Best Practices
 
-- **Never Commit API Keys:** If you integrate with the official Riot Games API, **never hardcode your `RGAPI-` key**.
+- **Never Commit API Keys:** If you integrate with the official Riot Games API, **never hardcode your `RGAPI-` key** into notebooks or scripts.
 - **Use `.env` files:**
-  1. Create a local `.env` file (which is excluded by `.gitignore`):
+  1. Create a local `.env` file (which is ignored by `.gitignore`):
      ```env
-     RIOT_API_KEY=RGAPI-your-actual-api-key-here
+     RIOT_API_KEY=your_api_key_here
      ```
   2. Access it safely in Python:
      ```python
@@ -247,7 +190,13 @@ docs/images/
 
 ---
 
+## 🙏 Acknowledgements
+
+- **[DeeperLeague](https://github.com/m-bain/deeperleague)** by Max Bain — for the foundational inspiration of applying deep learning and computer vision to League of Legends gameplay.
+- **[Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics)** — for the object detection architecture.
+
+---
+
 ## ⚖️ Legal Disclaimer
 
 `DeeperHealthBarsLeague` is an educational research project exploring computer vision and synthetic data generation. It is not endorsed by Riot Games and does not reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games and all associated properties are trademarks or registered trademarks of Riot Games, Inc.
-

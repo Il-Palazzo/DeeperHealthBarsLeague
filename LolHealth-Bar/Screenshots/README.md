@@ -40,4 +40,4 @@ The synthetic data generator pastes freshly rendered, perfectly labeled health b
 - **Recommended Resolution:** `1920x1080` (or native monitor resolution).
 - **Formats:** `.png`, `.jpg`, `.jpeg`.
 - **Quantity:** 50–200 unique screenshots provide sufficient background diversity for training.
-- **Git Tracking:** All image files in this directory are ignored by `.gitignore` so your personal captures are never uploaded to GitHub.
+- **Git Tracking:** All image files in this directory are excluded by `.gitignore` to keep local captures separate from version control.
