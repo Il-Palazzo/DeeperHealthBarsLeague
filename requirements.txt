@@ -1,0 +1,22 @@
+# Core Computer Vision & Imaging
+opencv-python>=4.8.0
+numpy>=1.24.0
+pillow>=10.0.0
+
+# Screen Capture & Input Handling
+mss>=9.0.0
+pynput>=1.7.6
+
+# Deep Learning & Object Detection
+torch>=2.0.0
+torchvision>=0.15.0
+ultralytics>=8.0.0
+
+# Performance Acceleration & Data Processing
+numba>=0.58.0
+pandas>=2.0.0
+
+# Interactive Notebook Environment
+jupyter>=1.0.0
+ipykernel>=6.25.0
+
